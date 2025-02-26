@@ -1,0 +1,81 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+defaults:
+  run:
+    shell: pwsh
+
+jobs:
+  build:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            asset_name: lolcat-linux-amd64
+            install: sudo apt-get update; sudo apt-get install -y libboost-program-options-dev
+
+          - os: macos-latest
+            asset_name: lolcat-macos-arm64
+            install: brew install boost
+            cmake_args: "-DCMAKE_OSX_ARCHITECTURES=arm64"
+
+          - os: windows-latest
+            asset_name: lolcat-windows-amd64.exe
+            install: vcpkg install boost-program-options:x64-windows-static
+            cmake_args: "-DVCPKG_TARGET_TRIPLET=x64-windows-static -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Cache vcpkg (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/cache@v4
+        with:
+          path: C:/vcpkg/installed
+          key: vcpkg-${{ runner.os }}-boost-static
+
+      - name: Install Dependencies
+        run: ${{ matrix.install }}
+
+      - name: Configure & Build
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC=ON ${{ matrix.cmake_args }}
+          cmake --build build --config Release --parallel
+
+      - name: Install to Dist
+        run: cmake --install build --config Release --prefix dist
+
+      - name: Rename Artifact
+        run: mv dist/bin/* ${{ matrix.asset_name }}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: binary-${{ matrix.os }}
+          path: ${{ matrix.asset_name }}
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+          generate_release_notes: true
