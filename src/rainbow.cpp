@@ -104,4 +104,4 @@ void Rainbow::print_line(const std::string &line) const {
     std::cout << '\n';
 }
 
-bool Rainbow::is_tty() const { return m_force_term || term::is_tty(fileno(stdout)); }
+bool Rainbow::is_tty() const { return m_force_term || term::is_tty(stdout); }
