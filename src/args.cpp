@@ -70,7 +70,7 @@ std::optional<cli::Args> cli::parse_args(const int argc, char *argv[]) noexcept 
                  "Enable animation")
                 ("duration,d", po::value<int>(&options.duration)->default_value(12),
                  "Animation duration")
-                ("speed,s", po::value<float>(&options.speed)->default_value(20.0f, "20.0"),
+                ("speed,s", po::value<float>(&options.speed)->default_value(300.0f, "300.0"),
                  "Animation speed")
                 ("invert,i", po::bool_switch(&options.invert),
                  "Invert colors")

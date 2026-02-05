@@ -62,12 +62,8 @@ void Rainbow::process(std::istream &in) {
 
     std::string line;
     while (std::getline(in, line)) {
-        if (m_animate) {
-            animate_line(line);
-        } else {
-            print_line(line);
-            ++m_line_count;
-        }
+        print_line(line);
+        m_line_count++;
     }
 
     if (is_tty())
@@ -89,36 +85,29 @@ std::string Rainbow::format_color(const uint8_t r, const uint8_t g, const uint8_
     return ff::format("\x1b[{};5;{}m", bg_fg, rgb_to_256(r, g, b));
 }
 
-
-void Rainbow::print_line(const std::string &line, bool /*animate*/) const {
+void Rainbow::print_line(const std::string &line) const {
     static const std::regex pattern(R"((\x1B\[[0-?]*[ -/]*[@-~])|([^\x1B]))");
     std::sregex_iterator it(line.begin(), line.end(), pattern);
     int char_index = 0;
-    for (const std::sregex_iterator end; it != end; ++it) {
+
+    for (const std::sregex_iterator end; it != end; it++) {
         const auto &match = *it;
+
         if (match[1].matched) {
             std::cout << match[1].str();
         } else if (match[2].matched) {
             const float pos = (static_cast<float>(m_color_offset + m_line_count + char_index)) / m_spread;
             std::cout << rainbow(m_freq, pos) << match[2].str()
                       << (m_invert ? term::RESET_BACKGROUND : term::RESET_FOREGROUND);
+
+            if (m_animate) {
+                std::cout << std::flush;
+                std::this_thread::sleep_for(std::chrono::microseconds(static_cast<int>(1000000 / m_speed)));
+            }
             ++char_index;
         }
     }
     std::cout << '\n';
-}
-
-void Rainbow::animate_line(const std::string &line) {
-    std::cout << term::save_pos;
-    const int original_os = m_color_offset;
-    for (int i = 0; i < m_duration; ++i) {
-        std::cout << term::restore_pos;
-        m_color_offset += static_cast<int>(m_spread);
-        print_line(line, true);
-        std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(1000 / m_speed)));
-    }
-    m_color_offset = original_os;
-    ++m_line_count;
 }
 
 bool Rainbow::is_tty() const { return m_force_term || term::is_tty(fileno(stdout)); }
