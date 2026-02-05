@@ -7,12 +7,34 @@
    version="1.0"
    width="800"
    height="488"
+   sodipodi:docname="cat.svg"
+   inkscape:version="1.4.3 (0d15f75, 2025-12-25)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns="http://www.w3.org/2000/svg"
    xmlns:svg="http://www.w3.org/2000/svg"
    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
    xmlns:cc="http://creativecommons.org/ns#"
    xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="0.58411407"
+     inkscape:cx="414.30264"
+     inkscape:cy="171.19944"
+     inkscape:window-width="1440"
+     inkscape:window-height="813"
+     inkscape:window-x="0"
+     inkscape:window-y="29"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer2" />
   <defs
      id="defs2424">
     <linearGradient
@@ -584,7 +606,8 @@
        x2="251.97218"
        y2="458.65466"
        gradientUnits="userSpaceOnUse"
-       spreadMethod="repeat" />
+       spreadMethod="repeat"
+       gradientTransform="matrix(0.98068733,0,0,0.98068733,-21.014741,5.4482863)" />
     <linearGradient
        xlink:href="#linearGradient4750"
        id="linearGradient9"
@@ -592,7 +615,8 @@
        y1="443.80417"
        x2="876.97217"
        y2="330.18478"
-       gradientUnits="userSpaceOnUse" />
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(0.98068625,0,0,0.98068625,-22.481297,3.7508077)" />
     <linearGradient
        xlink:href="#linearGradient4750"
        id="linearGradient2"
@@ -1080,24 +1104,26 @@
     </g>
     <text
        xml:space="preserve"
-       style="line-height:0%;writing-mode:lr-tb;direction:ltr;fill:url(#linearGradient7);fill-opacity:1"
-       x="113.30522"
-       y="488.25473"
-       id="text1"><tspan
+       style="font-size:11.7683px;line-height:0%;writing-mode:lr-tb;direction:ltr;fill:url(#linearGradient7);fill-opacity:1;stroke-width:0.980687"
+       x="90.102257"
+       y="484.2735"
+       id="text1"
+       transform="scale(0.99760861,1.0023971)"><tspan
          id="tspan1"
-         x="113.30522"
-         y="488.25473"
-         style="font-size:266.667px;line-height:1.25;fill:url(#linearGradient7);fill-opacity:1">+</tspan></text>
+         x="90.102257"
+         y="484.2735"
+         style="font-size:261.517px;line-height:1.25;fill:url(#linearGradient7);fill-opacity:1;stroke-width:0.980687">+</tspan></text>
     <text
        xml:space="preserve"
-       style="line-height:0%;writing-mode:lr-tb;direction:ltr;fill:url(#linearGradient9);fill-opacity:1"
-       x="738.30524"
-       y="488.85147"
-       id="text1-6"><tspan
+       style="font-size:11.7682px;line-height:0%;writing-mode:lr-tb;direction:ltr;fill:url(#linearGradient9);fill-opacity:1;stroke-width:0.980686"
+       x="701.56451"
+       y="483.16071"
+       id="text1-6"
+       transform="scale(0.99760862,1.0023971)"><tspan
          id="tspan1-7"
-         x="738.30524"
-         y="488.85147"
-         style="font-size:266.667px;line-height:1.25;fill:url(#linearGradient9);fill-opacity:1">+</tspan></text>
+         x="701.56451"
+         y="483.16071"
+         style="font-size:261.517px;line-height:1.25;fill:url(#linearGradient9);fill-opacity:1;stroke-width:0.980686">+</tspan></text>
   </g>
   <metadata
      id="metadata21518">
