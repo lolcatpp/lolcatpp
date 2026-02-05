@@ -28,6 +28,7 @@
 */
 
 #include "rainbow.hpp"
+#include "ansiparser.hpp"
 #include "terminal.hpp"
 
 #include <cmath>
@@ -35,7 +36,6 @@
 #include <iostream>
 #include <numbers>
 #include <random>
-#include <regex>
 #include <string>
 #include <thread>
 #include "format.hpp"
@@ -51,7 +51,7 @@ Rainbow::Rainbow(const cli::Options &options) :
     m_force_term(options.force) {}
 
 void Rainbow::process(std::istream &in) {
-    if (m_animate && is_tty())
+    if (m_animate && is_a_real_terminal())
         std::cout << term::hide_cursor;
 
     std::string line;
@@ -60,7 +60,7 @@ void Rainbow::process(std::istream &in) {
         m_line_count++;
     }
 
-    if (is_tty())
+    if (is_a_real_terminal())
         std::cout << term::show_cursor << term::reset;
 }
 
@@ -69,9 +69,9 @@ class Color {
 public:
     Color(const float freq, const float pos) {
         constexpr float pi = std::numbers::pi_v<float>;
-        r = static_cast<uint8_t>(std::sin(freq * pos) * 127 + 128);
-        g = static_cast<uint8_t>(std::sin(freq * pos + 2 * pi / 3) * 127 + 128);
-        b = static_cast<uint8_t>(std::sin(freq * pos + 4 * pi / 3) * 127 + 128);
+        r = std::sin(freq * pos) * 127 + 128;
+        g = std::sin(freq * pos + 2 * pi / 3) * 127 + 128;
+        b = std::sin(freq * pos + 4 * pi / 3) * 127 + 128;
     }
 
     [[nodiscard]] std::string format(const bool invert, const bool truecolor) const {
@@ -86,30 +86,32 @@ private:
 };
 
 
-void Rainbow::print_line(const std::string &line) const {
-    static const std::regex pattern(R"((\x1B\[[0-?]*[ -/]*[@-~])|([^\x1B]))");
-    std::sregex_iterator it(line.begin(), line.end(), pattern);
+void Rainbow::print_line(std::string_view line) const {
     int char_index = 0;
+    auto get_position = [&]() {
+        float total_position = m_color_offset + m_line_count + char_index;
+        return total_position / m_spread;
+    };
 
-    for (const std::sregex_iterator end; it != end; it++) {
-        const auto &match = *it;
-
-        if (match[1].matched) {
-            std::cout << match[1].str();
-        } else if (match[2].matched) {
-            const float pos = (static_cast<float>(m_color_offset + m_line_count + char_index)) / m_spread;
-            Color color(m_freq, pos);
-            std::cout << color.format(m_invert, m_truecolor_mode) << match[2].str()
-                      << (m_invert ? term::RESET_BACKGROUND : term::RESET_FOREGROUND);
-
-            if (m_animate) {
-                std::cout << std::flush;
-                std::this_thread::sleep_for(std::chrono::microseconds(static_cast<int>(1000000 / m_speed)));
-            }
-            char_index++;
+    AnsiParser parser(line);
+    for (const auto &token: parser) {
+        if (token.is_escape) {
+            std::cout << token.content;
+            continue;
         }
+        Color color(m_freq, get_position());
+
+        std::cout << color.format(m_invert, m_truecolor_mode) << token.content
+                  << (m_invert ? term::RESET_BACKGROUND : term::RESET_FOREGROUND);
+
+        if (m_animate) {
+            std::cout << std::flush;
+            std::this_thread::sleep_for(std::chrono::microseconds(static_cast<int>(1000000 / m_speed)));
+        }
+        char_index++;
     }
+
     std::cout << '\n';
 }
 
-bool Rainbow::is_tty() const { return m_force_term || term::is_tty(stdout); }
+bool Rainbow::is_a_real_terminal() const { return m_force_term || term::is_tty(stdout); }

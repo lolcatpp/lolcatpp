@@ -1,20 +1,19 @@
 #pragma once
 
-#include <stdint.h>
-#include <string>
+#include <istream>
+#include <string_view>
 
 #include "args.hpp"
+
 
 class Rainbow {
 public:
     explicit Rainbow(const cli::Options &options);
-
     void process(std::istream &in);
 
 private:
-    void print_line(const std::string &line) const;
-
-    [[nodiscard]] bool is_tty() const;
+    void print_line(std::string_view line) const;
+    [[nodiscard]] bool is_a_real_terminal() const;
 
 private:
     float m_spread;
