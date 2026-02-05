@@ -12,13 +12,24 @@ I'ts also cross-platform.
 
 ## Example usage
 
-I've found that `fortune` + `cowsay` + `lolcat` is an impeccable combo.
+**Help:**
 
 <div align="center">
-    <img src="assets/example-usage.png"
-        alt="Example usage"
-        height=500
-    />
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/help-dark.jpg">
+    <source media="(prefers-color-scheme: light)" srcset="assets/help-light.jpg">
+    <img alt="Example usage" src="assets/help-light.jpg" width="900" style="max-width: 100%;" >
+  </picture>
+</div>
+
+**Example usage:** `fortune` + `cowsay` + `lolcat`
+
+<div align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/example-dark.jpg">
+    <source media="(prefers-color-scheme: light)" srcset="assets/example-light.jpg">
+    <img alt="Example usage" src="assets/example-light.jpg" width="900" style="max-width: 100%;">
+  </picture>
 </div>
 
 ## Getting it
