@@ -32,6 +32,8 @@
 #ifdef _WIN32
 
 #include <io.h>
+#define fileno _fileno
+#define isatty _isatty
 
 #else
 
@@ -40,11 +42,8 @@
 #endif
 
 namespace term {
-    bool is_tty(const int fd) {
-#ifdef _WIN32
-        return _isatty(fd) != 0;
-#else
-        return isatty(fd) != 0;
-#endif
-    }
-}
+
+bool is_tty(const int fd) { return isatty(fd) != 0; }
+bool is_tty(FILE *stream) { return is_tty(fileno(stream)); }
+
+} // namespace term

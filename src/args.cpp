@@ -30,8 +30,12 @@
 #include "args.hpp"
 
 #include <boost/program_options.hpp>
+#include <cstdio>
 #include <iostream>
+#include <sstream>
 
+#include "rainbow.hpp"
+#include "terminal.hpp"
 #include "version.hpp"
 
 namespace po = boost::program_options;
@@ -85,13 +89,28 @@ std::optional<cli::Input> cli::parse_args(const int argc, char *argv[]) noexcept
         po::store(po::command_line_parser(argc, argv).options(desc).positional(p).run(), vm);
         po::notify(vm);
 
+        // We don't want to colorize the output here in automated testing
+        // or make it hard for other programs.
+        auto show_info = [&](std::stringstream &ss) {
+            if (args.force || term::is_tty(stdout)) {
+                Rainbow rainbow(args);
+                rainbow.process(ss);
+            } else {
+                std::cout << ss.str();
+            }
+        };
+
         if (vm.contains("help")) {
-            std::cout << desc << "\n\n" << footer;
+            std::stringstream ss;
+            ss << desc << "\n\n" << footer;
+            show_info(ss);
             return std::nullopt;
         }
 
         if (vm.contains("version")) {
-            std::cout << "lolcat++ version " << PROJECT_VERSION << '\n';
+            std::stringstream ss;
+            ss << "lolcat++ version " << PROJECT_VERSION << '\n';
+            show_info(ss);
             return std::nullopt;
         }
         input.files = vm.contains("files") ? vm["files"].as<std::vector<std::string>>() : std::vector<std::string>{"-"};
