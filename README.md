@@ -69,6 +69,8 @@ if ($currentPath -notlike "*$installDir*") {
 ### Building
 
 You'll need _cmake_, boost's _program_options_, and a C++ 20 compatible compiler.
+If your compiler supports C++ 20, but doesn't support `<format>`, then you'll also need
+_libfmt_ (it's used as a polyfill).
 Thereafter, just run
 
 ```bash

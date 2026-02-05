@@ -1,8 +1,9 @@
 cmake_minimum_required(VERSION 3.22)
-project(lolcat VERSION 2.0.0)
+project(lolcat VERSION 2.0.1)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # Makes development easier
 
 # default to Release
 if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -19,6 +20,11 @@ if (BUILD_STATIC)
     endif()
 endif()
 
+include(CheckIncludeFileCXX)
+check_include_file_cxx("format" HAS_FORMAT)
+if(NOT HAS_FORMAT)
+    find_package(fmt REQUIRED)
+endif()
 find_package(Boost COMPONENTS program_options REQUIRED)
 
 configure_file(
@@ -33,6 +39,10 @@ file(GLOB_RECURSE SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp")
 add_executable(${CMAKE_PROJECT_NAME} ${SOURCES})
 
 target_link_libraries(${CMAKE_PROJECT_NAME} LINK_PUBLIC ${Boost_LIBRARIES})
+if(NOT HAS_FORMAT)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE USE_LIBFMT)
+    target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)
+endif()
 
 # Compilator options & Warnings
 if (MSVC)

@@ -31,14 +31,15 @@
 #include "terminal.hpp"
 
 #include <cmath>
-#include <iostream>
 #include <cstring>
+#include <format>
+#include <iostream>
+#include <numbers>
+#include <random>
+#include <regex>
 #include <string>
 #include <thread>
-#include <numbers>
-#include <regex>
-#include <random>
-#include <format>
+#include "format.hpp"
 
 constexpr int rgb_to_256(const uint8_t r, const uint8_t g, const uint8_t b) {
     return 16 + (36 * (r / 51) + 6 * (g / 51) + (b / 51));
@@ -46,20 +47,13 @@ constexpr int rgb_to_256(const uint8_t r, const uint8_t g, const uint8_t b) {
 
 static bool is_truecolor() {
     const char *colorterm = std::getenv("COLORTERM");
-    return colorterm &&
-           (std::strstr(colorterm, "truecolor") || std::strstr(colorterm, "24bit"));
+    return colorterm && (std::strstr(colorterm, "truecolor") || std::strstr(colorterm, "24bit"));
 }
 
 Rainbow::Rainbow(const cli::Args &args) :
-        m_spread(args.spread),
-        m_speed(args.speed),
-        m_freq(args.freq),
-        m_duration(args.duration),
-        m_color_offset(args.seed ? args.seed : static_cast<int>(std::random_device{}() % 256)),
-        m_invert(args.invert),
-        m_animate(args.animate),
-        m_truecolor_mode(args.truecolor || is_truecolor()),
-        m_force_term(args.force) {}
+    m_spread(args.spread), m_speed(args.speed), m_freq(args.freq), m_duration(args.duration),
+    m_color_offset(args.seed ? args.seed : static_cast<int>(std::random_device{}() % 256)), m_invert(args.invert),
+    m_animate(args.animate), m_truecolor_mode(args.truecolor || is_truecolor()), m_force_term(args.force) {}
 
 void Rainbow::process(std::istream &in) {
     if (m_animate && is_tty())
@@ -90,8 +84,8 @@ std::string Rainbow::rainbow(const float freq, const float pos) const {
 std::string Rainbow::format_color(const uint8_t r, const uint8_t g, const uint8_t b) const {
     const auto bg_fg = m_invert ? 48 : 38;
     if (m_truecolor_mode)
-        return std::format("\x1b[{};2;{};{};{}m", bg_fg, r, g, b);
-    return std::format("\x1b[{};5;{}m", bg_fg, rgb_to_256(r, g, b));
+        return ff::format("\x1b[{};2;{};{};{}m", bg_fg, r, g, b);
+    return ff::format("\x1b[{};5;{}m", bg_fg, rgb_to_256(r, g, b));
 }
 
 
@@ -105,8 +99,7 @@ void Rainbow::print_line(const std::string &line, bool /*animate*/) const {
             std::cout << match[1].str();
         } else if (match[2].matched) {
             const float pos = (static_cast<float>(m_color_offset + m_line_count + char_index)) / m_spread;
-            std::cout << rainbow(m_freq, pos)
-                      << match[2].str()
+            std::cout << rainbow(m_freq, pos) << match[2].str()
                       << (m_invert ? term::RESET_BACKGROUND : term::RESET_FOREGROUND);
             ++char_index;
         }
@@ -121,9 +114,7 @@ void Rainbow::animate_line(const std::string &line) {
         std::cout << term::restore_pos;
         m_color_offset += static_cast<int>(m_spread);
         print_line(line, true);
-        std::this_thread::sleep_for(
-                std::chrono::milliseconds(static_cast<int>(1000 / m_speed))
-        );
+        std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(1000 / m_speed)));
     }
     m_color_offset = original_os;
     ++m_line_count;
