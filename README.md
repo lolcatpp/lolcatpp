@@ -26,7 +26,9 @@ I've found that `fortune` + `cowsay` + `lolcat` is an impeccable combo.
 Just head over to the [releases](https://github.com/lolcatpp/lolcatpp/releases) and download it.
 Here's some copy-paste scripts for your platform:
 
-### Linux
+### Linux: from releases
+
+Grab the latest release from the releases with the following command.
 
 ```bash
 curl -L \
@@ -36,7 +38,24 @@ chmod +x /tmp/lolcat
 sudo mv -v /tmp/lolcat /usr/local/bin/lolcat
 ```
 
-### macOS (Apple Silicon)
+### macOS: Homebrew (recommended)
+
+There's a homebrew tap setup under [lolcatpp/homebrew-tap](https://github.com/lolcatpp/homebrew-tap).
+See the repository for more detailed instructions.
+It's updated automatically in the CI/CD, which means that you're getting the latest updates.
+It downloads the prebuilt binary found under the releases if you're on _arm64_ or compiles from source
+if your're on _x86_64_.
+
+```bash
+brew tap lolcatpp/tap
+brew install lolcatpp
+```
+
+### macOS: from releases, only Apple Silicon
+
+Grab the latest release from the releases with the following command.
+Unfortunatly it's a pain in the ass to compile to _x86_64_ for macOS on Github-Actions.
+We recommend that you use either the _homebrew-tap_ or compile manually from source.
 
 ```bash
 curl -L \
@@ -46,7 +65,9 @@ chmod +x /tmp/lolcat
 sudo mv -v /tmp/lolcat /usr/local/bin/lolcat
 ```
 
-### Windows (Administrator PowerShell)
+### Windows: from releases (Administrator PowerShell)
+
+Grab the latest release from the releases, and update the `$PATH` vairable, with the following command.
 
 ```powershell
 Invoke-WebRequest `
