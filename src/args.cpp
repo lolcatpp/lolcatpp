@@ -53,7 +53,8 @@ std::optional<cli::Args> cli::parse_args(const int argc, char *argv[]) noexcept 
                                  "Options");
 
     std::string_view footer("Bugs/feature-requests: <https://github.com/lolcatpp/lolcatpp/issues>\n"
-                            "Lolcat++ home page:    <https://github.com/lolcatpp/lolcatpp>\n");
+                            "Lolcat++ home page:    <https://github.com/lolcatpp/lolcatpp>\n"
+                            "Original idea:         <https://github.com/busyloop/lolcat>\n");
 
     try {
         // clang-format off
@@ -102,7 +103,7 @@ std::optional<cli::Args> cli::parse_args(const int argc, char *argv[]) noexcept 
 
         if (vm.contains("help")) {
             std::stringstream ss;
-            ss << desc << "\n\n" << footer;
+            ss << desc << '\n' << footer;
             show_info(ss);
             return std::nullopt;
         }
