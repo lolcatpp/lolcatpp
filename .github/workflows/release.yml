@@ -137,3 +137,57 @@ jobs:
           git add .
           git commit -m "Update formula to v${{ steps.info.outputs.VERSION }}"
           git push
+
+  update-aur:
+    name: Update AUR (${{ matrix.type }})
+    needs: release
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - type: source
+            pkgname: lolcat++
+            script: deploy_aur_source.sh
+          - type: binary
+            pkgname: lolcat++-bin
+            script: deploy_aur_binary.sh
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          path: main-repo
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.AUR_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
+
+      - name: Clone AUR Repo
+        run: git clone ssh://aur@aur.archlinux.org/${{ matrix.pkgname }}.git aur-repo
+
+      - name: Update Package
+        working-directory: aur-repo
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          bash ../main-repo/deployment/${{ matrix.script }} "$VERSION"
+
+      - name: Commit and Push
+        working-directory: aur-repo
+        run: |
+          git config user.name "Love Billenius"
+          git config user.email "lovebillenius@disroot.org"
+          git add PKGBUILD .SRCINFO
+
+          if ! git diff --cached --quiet; then
+            git commit -m "Update to ${GITHUB_REF#refs/tags/v}"
+            git push
+          else
+            echo "No changes detected."
+          fi
