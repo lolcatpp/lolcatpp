@@ -69,6 +69,54 @@ Grab the latest release from the releases with the following command.
 curl -sSL "https://raw.githubusercontent.com/lolcatpp/lolcatpp/master/scripts/install.sh" | bash
 ```
 
+### Nix / NixOS
+
+You can run it directly with Nix flakes:
+
+```bash
+nix run github:lolcatpp/lolcatpp
+```
+
+To install it into your profile:
+
+```bash
+nix profile install github:lolcatpp/lolcatpp
+```
+
+If you're working from a local checkout:
+
+```bash
+nix build
+nix develop
+```
+
+To install it system-wide on NixOS from your own flake, add this input:
+
+```nix
+{
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    "lolcat++" = {
+      url = "github:lolcatpp/lolcatpp";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+  };
+}
+```
+
+Then add the package to `environment.systemPackages` in one of your NixOS modules:
+
+```nix
+{ inputs, pkgs, ... }:
+{
+  environment.systemPackages = [
+    inputs."lolcat++".packages.${pkgs.system}.default
+  ];
+}
+```
+
+If your system flake does not override it with `follows`, `lolcat++` defaults to `nixos-unstable`.
+
 ### macOS: Homebrew (recommended)
 
 There's a homebrew tap setup under [lolcatpp/homebrew-tap](https://github.com/lolcatpp/homebrew-tap).
