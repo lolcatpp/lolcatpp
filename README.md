@@ -63,6 +63,12 @@ paru -S lolcat++-bin
 
 ### Debian / Ubuntu / Linux Mint
 
+| Family | Versions                          | Architectures |
+| ------ | --------------------------------- | ------------- |
+| Debian | 13 (Trixie)                       | amd64, arm64  |
+| Ubuntu | 24.04 LTS (Noble), 25.04 (Plucky) | amd64, arm64  |
+| Mint   | LMDE 7 / 22 / 22.1 / 22.2 / 22.3  | amd64, arm64  |
+
 Use the apt repo over on [lolcatpp/apt](https://github.com/lolcatpp/apt).
 
 ```bash
@@ -76,6 +82,40 @@ curl -fsSL https://lolcatpp.github.io/apt/pubkey.gpg | sudo tee /etc/apt/keyring
 
 sudo apt update
 sudo apt install lolcat++
+```
+
+### Fedora / RHEL / Rocky / Alma
+
+| Family              | Versions | Architectures   |
+| ------------------- | -------- | --------------- |
+| Fedora              | 43, 44   | x86_64, aarch64 |
+| RHEL / Rocky / Alma | 9, 10    | x86_64, aarch64 |
+
+Use the dnf compatible repo over on [lolcatpp/rpm](https://github.com/lolcatpp/rpm).
+
+```bash
+. /etc/os-release
+case "$ID" in
+  fedora)               family="fedora-${VERSION_ID}" ;;
+  rhel|rocky|almalinux) family="rhel-${VERSION_ID%%.*}" ;;
+  *) echo "unsupported distro: $ID"; exit 1 ;;
+esac
+sudo curl -fsSLo /etc/yum.repos.d/lolcatpp.repo "https://lolcatpp.github.io/rpm/${family}/lolcatpp.repo"
+sudo dnf install -y lolcat++
+```
+
+### openSUSE Leap
+
+**Supported:** openSUSE Leap 16.0 -- x86_64 & aarch64
+
+Use the zypper compatible repo over on [lolcatpp/rpm](https://github.com/lolcatpp/rpm).
+
+```bash
+. /etc/os-release
+sudo zypper addrepo --gpgcheck \
+  "https://lolcatpp.github.io/rpm/opensuse-leap-${VERSION_ID}/lolcatpp.repo"
+sudo rpm --import https://lolcatpp.github.io/rpm/pubkey.gpg
+sudo zypper install lolcat++
 ```
 
 ### Nix / NixOS
