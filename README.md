@@ -61,12 +61,21 @@ paru -S lolcat++
 paru -S lolcat++-bin
 ```
 
-### Linux & macOS: from releases
+### Debian / Ubuntu / Linux Mint
 
-Grab the latest release from the releases with the following command.
+Use the apt repo over on [lolcatpp/apt](https://github.com/lolcatpp/apt).
 
 ```bash
-curl -sSL "https://raw.githubusercontent.com/lolcatpp/lolcatpp/master/scripts/install.sh" | bash
+sudo install -d /etc/apt/keyrings
+. /etc/os-release && \
+    CODENAME="${UBUNTU_CODENAME:-$VERSION_CODENAME}" && \
+    echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/lolcatpp.asc] https://lolcatpp.github.io/apt $CODENAME main" \
+    | sudo tee /etc/apt/sources.list.d/lolcatpp.list
+
+curl -fsSL https://lolcatpp.github.io/apt/pubkey.gpg | sudo tee /etc/apt/keyrings/lolcatpp.asc > /dev/null
+
+sudo apt update
+sudo apt install lolcat++
 ```
 
 ### Nix / NixOS
@@ -117,7 +126,7 @@ Then add the package to `environment.systemPackages` in one of your NixOS module
 
 If your system flake does not override it with `follows`, `lolcat++` defaults to `nixos-unstable`.
 
-### macOS: Homebrew (recommended)
+### macOS: Homebrew
 
 There's a homebrew tap setup under [lolcatpp/homebrew-tap](https://github.com/lolcatpp/homebrew-tap).
 See the repository for more detailed instructions.
@@ -130,9 +139,19 @@ brew tap lolcatpp/tap
 brew install lolcatpp
 ```
 
+### Linux & macOS: from releases
+
+If none of the options above suit you needs: grab the latest release from the
+[releases](https://github.com/lolcatpp/apt/releases) with the following command.
+
+```bash
+curl -sSL "https://raw.githubusercontent.com/lolcatpp/lolcatpp/master/scripts/install.sh" | bash
+```
+
 ### Windows: from releases (Administrator PowerShell)
 
-Grab the latest release from the releases, and update the `$PATH` variable, with the following command.
+Grab the latest release from the [releases](https://github.com/lolcatpp/apt/releases),
+and update the `$PATH` variable, with the following command.
 
 ```powershell
 iwr -useb "https://raw.githubusercontent.com/lolcatpp/lolcatpp/master/scripts/install.ps1" | iex
