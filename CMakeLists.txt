@@ -61,3 +61,21 @@ endif ()
 install(TARGETS ${CMAKE_PROJECT_NAME}
         RUNTIME DESTINATION bin
 )
+
+set(CPACK_PACKAGE_NAME "lolcat++")
+set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Concatenate and rainbow-colorize files (C++ port of lolcat)")
+set(CPACK_PACKAGE_HOMEPAGE_URL "https://github.com/lolcatpp/lolcatpp")
+set(CPACK_PACKAGE_CONTACT "Love Billenius <lovebillenius@disroot.org>")
+
+set(CPACK_GENERATOR "DEB")
+set(CPACK_DEBIAN_PACKAGE_NAME "lolcat++")
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Love Billenius <lovebillenius@disroot.org>")
+set(CPACK_DEBIAN_PACKAGE_SECTION "utils")
+set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
+set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "${CPACK_PACKAGE_HOMEPAGE_URL}")
+set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+set(CPACK_DEBIAN_PACKAGE_CONFLICTS "lolcat")
+set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
+
+include(CPack)
