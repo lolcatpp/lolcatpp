@@ -176,7 +176,9 @@ jobs:
 
       - name: Configure & Build
         run: |
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DDEB_VERSION_SUFFIX="~${{ matrix.suite }}"
           cmake --build build --config Release --parallel
 
       - name: Package with CPack

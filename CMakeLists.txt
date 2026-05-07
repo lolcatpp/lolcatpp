@@ -63,7 +63,9 @@ install(TARGETS ${CMAKE_PROJECT_NAME}
 )
 
 set(CPACK_PACKAGE_NAME "lolcat++")
-set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
+# DEB_VERSION_SUFFIX (optional, e.g. "~noble") makes a distro's package version
+# unique in a shared reprepro pool: 2.5.2 → 2.5.2~noble.
+set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}${DEB_VERSION_SUFFIX}")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Concatenate and rainbow-colorize files (C++ port of lolcat)")
 set(CPACK_PACKAGE_HOMEPAGE_URL "https://github.com/lolcatpp/lolcatpp")
 set(CPACK_PACKAGE_CONTACT "Love Billenius <lovebillenius@disroot.org>")
