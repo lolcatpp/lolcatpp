@@ -294,6 +294,11 @@ jobs:
             installer: dnf
             cxx_pkg: gcc-c++
             boost_pkg: boost-devel
+            # Stock F44 ships libstdc++-16.0.1 which lacks the strong
+            # __do_vformat_to symbol that GCC 16.1.1's <format> headers
+            # generate. Use libfmt instead until upstream catches up.
+            extra_pkgs: fmt-devel
+            force_libfmt: "ON"
           - suite: rhel-9
             container: rockylinux/rockylinux:9
             installer: dnf
@@ -317,13 +322,13 @@ jobs:
         if: matrix.installer == 'dnf'
         run: |
           dnf install -y --setopt=install_weak_deps=False \
-            ${{ matrix.cxx_pkg }} cmake git rpm-build ${{ matrix.boost_pkg }}
+            ${{ matrix.cxx_pkg }} cmake git rpm-build ${{ matrix.boost_pkg }} ${{ matrix.extra_pkgs }}
 
       - name: Install Build Dependencies (zypper)
         if: matrix.installer == 'zypper'
         run: |
           zypper --non-interactive install --no-recommends \
-            ${{ matrix.cxx_pkg }} cmake git rpm-build ${{ matrix.boost_pkg }}
+            ${{ matrix.cxx_pkg }} cmake git rpm-build ${{ matrix.boost_pkg }} ${{ matrix.extra_pkgs }}
 
       - uses: actions/checkout@v4
         with:
@@ -334,7 +339,9 @@ jobs:
           if [ -n "${{ matrix.enable_script }}" ]; then
             source "${{ matrix.enable_script }}"
           fi
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DFORCE_LIBFMT=${{ matrix.force_libfmt || 'OFF' }}
           cmake --build build --config Release --parallel
 
       - name: Package with CPack
@@ -397,9 +404,8 @@ jobs:
             gpg --batch --yes --detach-sign --armor \
               "rpm-repo/${suite}/repodata/repomd.xml"
 
-            # Drop a per-suite .repo file. The baseurl uses $releasever so
-            # the same file follows users across distro upgrades within a
-            # family (e.g. F43 → F44).
+            # Per-suite .repo file with $releasever so the same file follows
+            # users across distro upgrades within a family (e.g. F43 → F44).
             case "$suite" in
               fedora-*)         baseurl_template='https://lolcatpp.github.io/rpm/fedora-$releasever' ;;
               rhel-*)           baseurl_template='https://lolcatpp.github.io/rpm/rhel-$releasever' ;;
@@ -415,26 +421,6 @@ jobs:
           repo_gpgcheck=1
           gpgkey=https://lolcatpp.github.io/rpm/pubkey.gpg
           EOF
-          done
-
-          # Single root-level .repo for `dnf config-manager addrepo` — uses
-          # $ID-$releasever so one URL serves every supported distro.
-          cat > rpm-repo/lolcatpp.repo <<'EOF'
-          [lolcatpp]
-          name=lolcat++
-          baseurl=https://lolcatpp.github.io/rpm/$ID-$releasever
-          enabled=1
-          gpgcheck=1
-          repo_gpgcheck=1
-          gpgkey=https://lolcatpp.github.io/rpm/pubkey.gpg
-          EOF
-
-          # Map RHEL-clone $ID values to our canonical rhel-N directory via
-          # symlinks so $ID-$releasever works on Rocky and Alma too.
-          for major in 9 10; do
-            for clone in rocky almalinux; do
-              ln -sfn "rhel-${major}" "rpm-repo/${clone}-${major}"
-            done
           done
 
       - name: Commit and Push
