@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.28...4.3)
-project(lolcat VERSION 2.5.3)
+cmake_minimum_required(VERSION 3.26...4.3)
+project(lolcat VERSION 2.5.4)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -60,17 +60,36 @@ endif ()
 
 install(TARGETS ${CMAKE_PROJECT_NAME}
         RUNTIME DESTINATION bin
+        COMPONENT runtime
 )
 
+# Debian and Fedora have different guidelines on where the license should end up
+install(FILES "${PROJECT_SOURCE_DIR}/LICENSE"
+        DESTINATION share/doc/lolcat++
+        RENAME copyright
+        COMPONENT deb_license
+        EXCLUDE_FROM_ALL
+)
+install(FILES "${PROJECT_SOURCE_DIR}/LICENSE"
+        DESTINATION share/licenses/lolcat++
+        COMPONENT rpm_license
+        EXCLUDE_FROM_ALL
+)
+
+set(CPACK_PROJECT_CONFIG_FILE "${PROJECT_SOURCE_DIR}/cmake/CPackProjectConfig.cmake")
+
 set(CPACK_PACKAGE_NAME "lolcat++")
-# DEB_VERSION_SUFFIX (optional, e.g. "~noble") makes a distro's package version
-# unique in a shared reprepro pool: 2.5.2 → 2.5.2~noble.
 set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}${DEB_VERSION_SUFFIX}")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Concatenate and rainbow-colorize files (C++ port of lolcat)")
 set(CPACK_PACKAGE_HOMEPAGE_URL "https://github.com/lolcatpp/lolcatpp")
 set(CPACK_PACKAGE_CONTACT "Love Billenius <lovebillenius@disroot.org>")
 
 set(CPACK_GENERATOR "DEB")
+# Component-based packaging for deb_license / rpm_license picked per-generator.
+# All components selected for a generator are merged into one .deb/.rpm.
+set(CPACK_DEB_COMPONENT_INSTALL ON)
+set(CPACK_RPM_COMPONENT_INSTALL ON)
+set(CPACK_COMPONENTS_GROUPING ALL_COMPONENTS_IN_ONE)
 set(CPACK_DEBIAN_PACKAGE_NAME "lolcat++")
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Love Billenius <lovebillenius@disroot.org>")
 set(CPACK_DEBIAN_PACKAGE_SECTION "utils")
@@ -79,5 +98,13 @@ set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "${CPACK_PACKAGE_HOMEPAGE_URL}")
 set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 set(CPACK_DEBIAN_PACKAGE_CONFLICTS "lolcat")
 set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
+
+set(CPACK_RPM_PACKAGE_NAME "lolcat++")
+set(CPACK_RPM_PACKAGE_LICENSE "BSD-3-Clause")
+set(CPACK_RPM_PACKAGE_GROUP "Applications/Text")
+set(CPACK_RPM_PACKAGE_URL "${CPACK_PACKAGE_HOMEPAGE_URL}")
+set(CPACK_RPM_PACKAGE_AUTOREQ ON)
+set(CPACK_RPM_PACKAGE_CONFLICTS "lolcat")
+set(CPACK_RPM_FILE_NAME RPM-DEFAULT)
 
 include(CPack)

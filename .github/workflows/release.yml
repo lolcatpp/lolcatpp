@@ -145,8 +145,8 @@ jobs:
           git push
 
   build-deb:
-    name: Build .deb (${{ matrix.suite }})
-    runs-on: ubuntu-latest
+    name: Build .deb (${{ matrix.suite }}/${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
     container: ${{ matrix.container }}
     defaults:
       run:
@@ -154,7 +154,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        suite:
+          - trixie
+          - noble
+          - plucky
+        arch:
+          - amd64
+          - arm64
         include:
+          - arch: amd64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
           - suite: trixie
             container: debian:13
           - suite: noble
@@ -188,7 +199,7 @@ jobs:
       - name: Upload .deb
         uses: actions/upload-artifact@v4
         with:
-          name: deb-${{ matrix.suite }}
+          name: deb-${{ matrix.suite }}-${{ matrix.arch }}
           path: build/*.deb
 
   update-apt-repo:
@@ -221,10 +232,16 @@ jobs:
           token: ${{ secrets.APT_REPO_TOKEN }}
           path: apt-repo
 
+      - name: Refresh Repo Metadata
+        run: |
+          # Re-export so any conf/distributions changes (e.g. new architectures)
+          # are applied to the dists/ indexes before we add the new packages.
+          reprepro -b apt-repo export
+
       - name: Add .debs to Repo
         run: |
           for suite in trixie noble plucky; do
-            for deb in debs/deb-${suite}/*.deb; do
+            for deb in debs/deb-${suite}-*/*.deb; do
               echo ">> Adding $deb to suite $suite"
               reprepro -b apt-repo includedeb "$suite" "$deb"
             done
@@ -232,6 +249,196 @@ jobs:
 
       - name: Commit and Push
         working-directory: apt-repo
+        run: |
+          git config user.name "Love Billenius"
+          git config user.email "lovebillenius@disroot.org"
+          git add .
+          if ! git diff --cached --quiet; then
+            git commit -m "Update packages to ${GITHUB_REF#refs/tags/v}"
+            git push
+          else
+            echo "No changes detected."
+          fi
+
+  build-rpm:
+    name: Build .rpm (${{ matrix.suite }}/${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    container: ${{ matrix.container }}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        suite:
+          - fedora-43
+          - fedora-44
+          - rhel-9
+          - rhel-10
+          - opensuse-leap-16.0
+        arch:
+          - amd64
+          - arm64
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+          - suite: fedora-43
+            container: fedora:43
+            installer: dnf
+            cxx_pkg: gcc-c++
+            boost_pkg: boost-devel
+          - suite: fedora-44
+            container: fedora:44
+            installer: dnf
+            cxx_pkg: gcc-c++
+            boost_pkg: boost-devel
+          - suite: rhel-9
+            container: rockylinux/rockylinux:9
+            installer: dnf
+            # Rocky 9 ships GCC 11 (no <format>); use Red Hat's gcc-toolset-15
+            cxx_pkg: gcc-toolset-15-gcc-c++
+            enable_script: /opt/rh/gcc-toolset-15/enable
+            boost_pkg: boost-devel
+          - suite: rhel-10
+            container: rockylinux/rockylinux:10
+            installer: dnf
+            cxx_pkg: gcc-c++
+            boost_pkg: boost-devel
+          - suite: opensuse-leap-16.0
+            container: opensuse/leap:16.0
+            installer: zypper
+            cxx_pkg: gcc-c++
+            boost_pkg: libboost_program_options1_86_0-devel
+
+    steps:
+      - name: Install Build Dependencies (dnf)
+        if: matrix.installer == 'dnf'
+        run: |
+          dnf install -y --setopt=install_weak_deps=False \
+            ${{ matrix.cxx_pkg }} cmake git rpm-build ${{ matrix.boost_pkg }}
+
+      - name: Install Build Dependencies (zypper)
+        if: matrix.installer == 'zypper'
+        run: |
+          zypper --non-interactive install --no-recommends \
+            ${{ matrix.cxx_pkg }} cmake git rpm-build ${{ matrix.boost_pkg }}
+
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Configure & Build
+        run: |
+          if [ -n "${{ matrix.enable_script }}" ]; then
+            source "${{ matrix.enable_script }}"
+          fi
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --config Release --parallel
+
+      - name: Package with CPack
+        working-directory: build
+        run: cpack -G RPM
+
+      - name: Upload .rpm
+        uses: actions/upload-artifact@v4
+        with:
+          name: rpm-${{ matrix.suite }}-${{ matrix.arch }}
+          path: build/*.rpm
+
+  update-rpm-repo:
+    name: Update RPM Repo
+    needs: build-rpm
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Install Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends createrepo-c gnupg
+
+      - name: Download .rpms
+        uses: actions/download-artifact@v4
+        with:
+          path: rpms
+          pattern: rpm-*
+
+      - name: Import GPG Key
+        run: |
+          echo "${{ secrets.APT_GPG_PRIVATE_KEY }}" | gpg --batch --import
+          KEY_ID=$(gpg --list-secret-keys --with-colons | awk -F: '/^sec:/ {print $5; exit}')
+          echo "GPG_KEY_ID=$KEY_ID" >> $GITHUB_ENV
+
+      - name: Checkout RPM Repo
+        uses: actions/checkout@v4
+        with:
+          repository: lolcatpp/rpm
+          token: ${{ secrets.APT_REPO_TOKEN }}
+          path: rpm-repo
+
+      - name: Lay Out RPMs and Build Metadata
+        run: |
+          for suite in fedora-43 fedora-44 rhel-9 rhel-10 opensuse-leap-16.0; do
+            mkdir -p "rpm-repo/${suite}"
+            cp rpms/rpm-${suite}-*/*.rpm "rpm-repo/${suite}/"
+
+            # Sign each RPM with the imported key (rpm --addsign uses the default key
+            # via ~/.rpmmacros if set; pass via macros to avoid stateful config).
+            for rpm in rpm-repo/${suite}/*.rpm; do
+              rpm --define "_gpg_name ${GPG_KEY_ID}" --addsign "$rpm"
+            done
+
+            createrepo_c --update "rpm-repo/${suite}"
+
+            # Sign repomd.xml so dnf/zypper can verify the metadata.
+            gpg --batch --yes --detach-sign --armor \
+              "rpm-repo/${suite}/repodata/repomd.xml"
+
+            # Drop a per-suite .repo file. The baseurl uses $releasever so
+            # the same file follows users across distro upgrades within a
+            # family (e.g. F43 → F44).
+            case "$suite" in
+              fedora-*)         baseurl_template='https://lolcatpp.github.io/rpm/fedora-$releasever' ;;
+              rhel-*)           baseurl_template='https://lolcatpp.github.io/rpm/rhel-$releasever' ;;
+              opensuse-leap-*)  baseurl_template='https://lolcatpp.github.io/rpm/opensuse-leap-$releasever' ;;
+              *)                baseurl_template="https://lolcatpp.github.io/rpm/${suite}" ;;
+            esac
+            cat > "rpm-repo/${suite}/lolcatpp.repo" <<EOF
+          [lolcatpp]
+          name=lolcat++
+          baseurl=${baseurl_template}
+          enabled=1
+          gpgcheck=1
+          repo_gpgcheck=1
+          gpgkey=https://lolcatpp.github.io/rpm/pubkey.gpg
+          EOF
+          done
+
+          # Single root-level .repo for `dnf config-manager addrepo` — uses
+          # $ID-$releasever so one URL serves every supported distro.
+          cat > rpm-repo/lolcatpp.repo <<'EOF'
+          [lolcatpp]
+          name=lolcat++
+          baseurl=https://lolcatpp.github.io/rpm/$ID-$releasever
+          enabled=1
+          gpgcheck=1
+          repo_gpgcheck=1
+          gpgkey=https://lolcatpp.github.io/rpm/pubkey.gpg
+          EOF
+
+          # Map RHEL-clone $ID values to our canonical rhel-N directory via
+          # symlinks so $ID-$releasever works on Rocky and Alma too.
+          for major in 9 10; do
+            for clone in rocky almalinux; do
+              ln -sfn "rhel-${major}" "rpm-repo/${clone}-${major}"
+            done
+          done
+
+      - name: Commit and Push
+        working-directory: rpm-repo
         run: |
           git config user.name "Love Billenius"
           git config user.email "lovebillenius@disroot.org"
