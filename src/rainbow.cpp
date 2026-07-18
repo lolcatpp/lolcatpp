@@ -48,7 +48,7 @@ constexpr int rgb_to_256(const uint8_t r, const uint8_t g, const uint8_t b) {
 }
 
 Rainbow::Rainbow(const cli::Options &options) :
-    m_spread(options.spread), m_speed(options.speed), m_freq(options.freq), m_duration(options.duration),
+    m_spread(options.spread), m_speed(options.speed), m_freq(options.freq),
     m_color_offset(options.seed ? options.seed : static_cast<int>(std::random_device{}() % 256)),
     m_invert(options.invert), m_animate(options.animate), m_truecolor_mode(options.truecolor || term::is_truecolor()),
     m_force_term(options.force) {}
