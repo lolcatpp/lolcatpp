@@ -24,4 +24,11 @@ bool is_tty(int fd);
 bool is_tty(FILE *stream);
 bool is_truecolor();
 
+/**
+ * Prepare the console for UTF-8 + ANSI output.
+ * On Windows this switches the output codepage to UTF-8 and enables virtual
+ * terminal (ANSI escape) processing. No-op elsewhere.
+ */
+void setup_console();
+
 } // namespace term

@@ -30,6 +30,7 @@
 #include "rainbow.hpp"
 #include "ansiparser.hpp"
 #include "terminal.hpp"
+#include "utf-8.hpp"
 
 #include <cmath>
 #include <cstdint>
@@ -58,6 +59,7 @@ void Rainbow::process(std::istream &in) {
 
     std::string line;
     while (std::getline(in, line)) {
+        utf8::ensure_utf8(line);
         print_line(line);
         m_line_count++;
     }
