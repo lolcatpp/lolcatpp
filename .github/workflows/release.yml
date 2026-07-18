@@ -146,6 +146,7 @@ jobs:
 
   build-deb:
     name: Build .deb (${{ matrix.suite }}/${{ matrix.arch }})
+    needs: build
     runs-on: ${{ matrix.runner }}
     container: ${{ matrix.container }}
     defaults:
@@ -204,7 +205,7 @@ jobs:
 
   update-apt-repo:
     name: Update APT Repo
-    needs: build-deb
+    needs: [build-deb, release]
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -262,6 +263,7 @@ jobs:
 
   build-rpm:
     name: Build .rpm (${{ matrix.suite }}/${{ matrix.arch }})
+    needs: build
     runs-on: ${{ matrix.runner }}
     container: ${{ matrix.container }}
     defaults:
@@ -356,7 +358,7 @@ jobs:
 
   update-rpm-repo:
     name: Update RPM Repo
-    needs: build-rpm
+    needs: [build-rpm, release]
     runs-on: ubuntu-latest
     defaults:
       run:
