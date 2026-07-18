@@ -34,6 +34,8 @@
 #ifdef _WIN32
 
 #include <io.h>
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 #define fileno _fileno
 #define isatty _isatty
 
@@ -52,6 +54,34 @@ bool is_truecolor() {
     const char *colorterm = std::getenv("COLORTERM");
     return colorterm && (std::strstr(colorterm, "truecolor") || std::strstr(colorterm, "24bit"));
 }
+
+#ifdef _WIN32
+namespace {
+UINT previous_codepage = 0;
+
+// The output codepage outlives the process (like chcp), so put it back
+void restore_codepage() {
+    if (previous_codepage != 0)
+        SetConsoleOutputCP(previous_codepage);
+}
+} // namespace
+
+void setup_console() {
+    const UINT current = GetConsoleOutputCP();
+    if (current != 0 && current != CP_UTF8) {
+        previous_codepage = current;
+        std::atexit(restore_codepage);
+    }
+    SetConsoleOutputCP(CP_UTF8);
+
+    HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);
+    DWORD mode = 0;
+    if (out != INVALID_HANDLE_VALUE && GetConsoleMode(out, &mode))
+        SetConsoleMode(out, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+}
+#else
+void setup_console() {}
+#endif
 
 
 } // namespace term

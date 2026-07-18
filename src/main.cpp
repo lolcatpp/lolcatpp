@@ -29,11 +29,14 @@
 
 #include "args.hpp"
 #include "rainbow.hpp"
+#include "terminal.hpp"
 
 #include <fstream>
 #include <iostream>
 
 int main(const int argc, char *argv[]) {
+    term::setup_console();
+
     const auto opt_args = cli::parse_args(argc, argv);
     if (!opt_args)
         return EXIT_SUCCESS;

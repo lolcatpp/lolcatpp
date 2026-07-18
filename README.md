@@ -197,6 +197,15 @@ and update the `$PATH` variable, with the following command.
 iwr -useb "https://raw.githubusercontent.com/lolcatpp/lolcatpp/master/scripts/install.ps1" | iex
 ```
 
+> [!NOTE]
+> Windows PowerShell 5.1 pipes output to native programs as ASCII by default, which
+> replaces non-ASCII characters (e.g. CJK) with literal `?` before they ever reach
+> lolcat. Either use PowerShell 7+ (pipes UTF-8 by default), or run this first:
+>
+> ```powershell
+> $OutputEncoding = [Console]::OutputEncoding = [Text.UTF8Encoding]::new()
+> ```
+
 ### Building
 
 You'll need _cmake_, boost and a C++ 20 compatible compiler.
